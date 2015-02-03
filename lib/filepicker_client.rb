@@ -5,10 +5,10 @@ require 'active_support/hash_with_indifferent_access'
 
 # Client interface for Filepicker's REST API
 class FilepickerClient
-  FP_FILE_PATH = "https://www.filepicker.io/api/file/"    # Path that Filepicker file handles are located under
-  FP_API_PATH = "https://www.filepicker.io/api/store/S3"  # Path to access the Filepicker API
+  FP_FILE_PATH = "https://www.filepicker.io/api/file/" # Path that Filepicker file handles are located under
+  FP_API_PATH = "https://www.filepicker.io/api/store/S3" # Path to access the Filepicker API
 
-  DEFAULT_POLICY_EXPIRY = 5 * 60  # 5 minutes (short for security, but allows for some wiggle room)
+  DEFAULT_POLICY_EXPIRY = 5 * 60 # 5 minutes (short for security, but allows for some wiggle room)
 
   # Creates a client that will use the given Filepicker key and secret for requests and signing operations
   # @param api_key [String] Filepicker API key
@@ -109,7 +109,7 @@ class FilepickerClient
   # @param path [String] Path the file should be organized under in the destination storage
   # @param file [File] File to upload
   # @return [FilepickerClientFile] Object representing the uploaded file in Filepicker
-  def store(file, path=nil)
+  def store(file, path=nil, mimetype, filename)
     signage = sign(path: path, call: :store)
 
     uri = URI.parse(FP_API_PATH)
@@ -122,7 +122,7 @@ class FilepickerClient
     uri.query = encode_uri_query(query_params)
     resource = get_fp_resource uri
 
-    response = resource.post fileUpload: file
+    response = resource.post fileUpload: file, mimetype: mimetype, filename: filename
 
     if response.code == 200
       response_data = JSON.parse response.body
@@ -200,7 +200,7 @@ class FilepickerClient
 
     resource = get_fp_resource uri
 
-    response = resource.post({})  # all data in query string already, empty hash is just to allow this call to be made
+    response = resource.post({}) # all data in query string already, empty hash is just to allow this call to be made
 
     if response.code == 200
       response_data = JSON.parse response.body
@@ -389,7 +389,7 @@ class FilepickerClient
     query = URI.encode_www_form(encodable)
     unless unencodable.empty?
       query << '&' if query.length > 0
-      query << unencodable.map{|k,v| "#{k}=#{v}"}.join('&')
+      query << unencodable.map { |k, v| "#{k}=#{v}" }.join('&')
     end
     query
   end
